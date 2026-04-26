@@ -247,7 +247,7 @@ export class SwTabCard extends LitElement {
       --sw-tab-border:         var(--divider-color, rgba(255,255,255,0.1));
       --sw-tab-font:           var(--primary-font-family, sans-serif);
       --sw-tab-font-size:      12px;
-      --sw-tab-title-size:     13px;
+      --sw-tab-btn-font-size:  var(--sw-tab-font-size);
       --sw-tab-letter-spacing: 0.04em;
       --sw-tab-gap:            6px;
       --sw-tab-padding:        5px 14px;
@@ -291,9 +291,9 @@ export class SwTabCard extends LitElement {
 
     .tab-title {
       font-family: var(--sw-tab-font);
-      font-size: var(--sw-tab-title-size);
+      font-size: var(--sw-tab-font-size);
       color: var(--sw-tab-color);
-      font-weight: 600;
+      font-weight: 400;
       letter-spacing: var(--sw-tab-letter-spacing);
       white-space: nowrap;
       flex-shrink: 0;
@@ -317,7 +317,7 @@ export class SwTabCard extends LitElement {
       border: none;
       background: transparent;
       color: var(--sw-tab-color);
-      font-size: var(--sw-tab-font-size);
+      font-size: var(--sw-tab-btn-font-size);
       font-family: var(--sw-tab-font);
       letter-spacing: var(--sw-tab-letter-spacing);
       cursor: pointer;
