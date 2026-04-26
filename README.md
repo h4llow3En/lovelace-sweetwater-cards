@@ -27,6 +27,15 @@ lovelace:
 
 ---
 
+## Cards Overview
+
+The *Lovelace Sweetwater Cards* bundle currently includes the following cards:
+
+- **SW Room Card** (`custom:sw-room-card`): An elegant, area-aware room overview card that auto-discovers entities (lights, window sensors, temperature) and renders a 24h temperature graph.
+- **SW Tab Card** (`custom:sw-tab-card`): A clean, flexible container card to define reusable nested cards and switch between them seamlessly.
+
+---
+
 ## 1. SW Room Card
 
 An elegant, area-aware room overview card.
@@ -327,16 +336,19 @@ cards:
 |---|---|---|
 | `tabs` | list | List of tab definitions. See below. |
 | `cards` | object | Key-value map of card definitions (reusable by name). |
+| `title` | string | Optional title shown next to the tabs. |
+| `title_align` | string | `left` (default), `center`, or `right`. Alignment of the title. |
+| `tab_align` | string | `left` (default), `center`, or `right`. Alignment of the tabs. |
 | `tab_style` | string | `pills` (default), `underline`, or `dropdown`. |
 | `columns` | number / string | Number of fixed columns for cards, or `'auto'` (default). |
 | `min_column_width` | number | Minimum card width for auto grid in pixels. Default `180`. |
-| `styles` | object | Per-card CSS overrides (e.g., `accent`, `radius`, `font-size`). Expanded to `--sw-tab-<key>`. |
+| `styles` | object | Per-card CSS overrides (e.g., `accent`, `radius`, `font-size`, `title-size`). Expanded to `--sw-tab-<key>`. |
 
 ### Tab Definition (`tabs`)
 
 | Key | Type | Description |
 |---|---|---|
-| `label` | string | Text shown on the tab. |
+| `label` | string | Optional text shown on the tab. |
 | `icon` | string | Optional MDI icon (e.g., `mdi:home`). |
 | `cards` | list | List of card keys from `cards` object to render when active. |
 

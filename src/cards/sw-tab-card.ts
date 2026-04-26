@@ -5,27 +5,21 @@ import type { HomeAssistant } from '../types/ha.js';
 // ── Config types ──────────────────────────────────────────────────────────────
 
 interface TabConfig {
-  label: string;
+  label?: string;
   icon?: string;
   cards: string[];
 }
-
-// tab_style controls the visual shape of the tab selector:
-//   pills     – scrollable row of rounded pill buttons (default)
-//   underline – text-only tabs with an underline indicator
-//   dropdown  – native <select> element; good for many tabs / tight spaces
 type TabStyle = 'pills' | 'underline' | 'dropdown';
 
 export interface TabCardConfig {
+  title?: string;
+  title_align?: 'left' | 'right' | 'center';
+  tab_align?: 'left' | 'center' | 'right';
   tabs: TabConfig[];
   cards: Record<string, unknown>;
   tab_style?: TabStyle;
-  // Number of fixed columns, or 'auto' for responsive grid (default: auto)
   columns?: number | 'auto';
-  // Min card width for auto grid, in px (default: 180)
   min_column_width?: number;
-  // Short keys are expanded to --sw-tab-<key>. Full --property names pass through.
-  // Examples:  accent: "#c9a96e"   radius: "8px"   font-size: "11px"
   styles?: Record<string, string>;
 }
 
@@ -61,7 +55,7 @@ export class SwTabCard extends LitElement {
 
     const prevKey = this._storageKey;
     this._config = config;
-    this._storageKey = `sw-tab-card:${config.tabs.map(t => t.label).join('|')}`;
+    this._storageKey = `sw-tab-card:${config.tabs.map((t, i) => t.label ?? t.icon ?? String(i)).join('|')}`;
 
     if (prevKey !== this._storageKey) this._cardEls.clear();
 
@@ -126,51 +120,80 @@ export class SwTabCard extends LitElement {
 
   // ── Tab bar renderers ─────────────────────────────────────────────────────────
 
-  private _renderPills() {
-    const tabs = this._config!.tabs;
+  private _dropdownLabel(tab: TabConfig, i: number): string {
+    if (tab.label) return tab.label;
+    if (tab.icon) {
+      const name = tab.icon.includes(':') ? tab.icon.slice(tab.icon.indexOf(':') + 1) : tab.icon;
+      return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    return String(i + 1);
+  }
+
+  private _barClass(...extra: string[]): string {
+    const align = this._config!.title_align ?? 'left';
+    return ['tab-bar', `tab-bar--${align}`, ...extra].filter(Boolean).join(' ');
+  }
+
+  private _tabsClass(style: string): string {
+    const { tab_align, title_align = 'left' } = this._config!;
+    // Explicit tab_align wins; otherwise mirror the title side for center layouts.
+    const align = tab_align ?? (title_align === 'center' ? 'center' : 'left');
+    return `tabs ${style} tabs--${align}`;
+  }
+
+  private _tabButton(tab: TabConfig, i: number) {
+    const iconOnly = !tab.label;
     return html`
-      <div class="tabs pills" role="tablist">
-        ${tabs.map((tab, i) => html`
-          <button
-            role="tab"
-            class="tab${i === this._activeTab ? ' active' : ''}"
-            aria-selected=${i === this._activeTab}
-            @click=${() => this._switchTab(i)}
-          >
-            ${tab.icon ? html`<ha-icon icon=${tab.icon}></ha-icon>` : nothing}
-            <span>${tab.label}</span>
-          </button>`)}
+      <button
+        role="tab"
+        class="tab${i === this._activeTab ? ' active' : ''}${iconOnly ? ' icon-only' : ''}"
+        aria-selected=${i === this._activeTab}
+        aria-label=${tab.label ?? tab.icon ?? ''}
+        @click=${() => this._switchTab(i)}
+      >
+        ${tab.icon ? html`<ha-icon icon=${tab.icon}></ha-icon>` : nothing}
+        ${tab.label ? html`<span>${tab.label}</span>` : nothing}
+      </button>`;
+  }
+
+  private _renderPills() {
+    const { tabs, title } = this._config!;
+    return html`
+      <div class=${this._barClass()}>
+        ${title ? html`<span class="tab-title">${title}</span>` : nothing}
+        <div class=${this._tabsClass('pills')} role="tablist">
+          ${tabs.map((tab, i) => this._tabButton(tab, i))}
+        </div>
       </div>`;
   }
 
   private _renderUnderline() {
-    const tabs = this._config!.tabs;
+    const { tabs, title } = this._config!;
     return html`
-      <div class="tabs underline" role="tablist">
-        ${tabs.map((tab, i) => html`
-          <button
-            role="tab"
-            class="tab${i === this._activeTab ? ' active' : ''}"
-            aria-selected=${i === this._activeTab}
-            @click=${() => this._switchTab(i)}
-          >
-            ${tab.icon ? html`<ha-icon icon=${tab.icon}></ha-icon>` : nothing}
-            <span>${tab.label}</span>
-          </button>`)}
+      <div class=${this._barClass('tab-bar--underline')}>
+        ${title ? html`<span class="tab-title">${title}</span>` : nothing}
+        <div class=${this._tabsClass('underline')} role="tablist">
+          ${tabs.map((tab, i) => this._tabButton(tab, i))}
+        </div>
       </div>`;
   }
 
   private _renderDropdown() {
-    const tabs = this._config!.tabs;
+    const { tabs, title } = this._config!;
     return html`
-      <div class="tabs dropdown">
-        <select
-          aria-label="Tab selection"
-          @change=${(e: Event) => this._switchTab(parseInt((e.target as HTMLSelectElement).value, 10))}
-        >
-          ${tabs.map((tab, i) => html`
-            <option value=${i} ?selected=${i === this._activeTab}>${tab.label}</option>`)}
-        </select>
+      <div class=${this._barClass()}>
+        ${title ? html`<span class="tab-title">${title}</span>` : nothing}
+        <div class=${this._tabsClass('dropdown')}>
+          <select
+            aria-label="Tab selection"
+            @change=${(e: Event) => this._switchTab(parseInt((e.target as HTMLSelectElement).value, 10))}
+          >
+            ${tabs.map((tab, i) => html`
+              <option value=${i} ?selected=${i === this._activeTab}>
+                ${this._dropdownLabel(tab, i)}
+              </option>`)}
+          </select>
+        </div>
       </div>`;
   }
 
@@ -218,24 +241,69 @@ export class SwTabCard extends LitElement {
       display: block;
 
       /* ── Overridable via styles: in config ─────────────────────────────── */
-      --sw-tab-accent:       var(--primary-color);
-      --sw-tab-accent-text:  var(--text-primary-color, #fff);
-      --sw-tab-color:        var(--secondary-text-color);
-      --sw-tab-border:       var(--divider-color, rgba(255,255,255,0.1));
-      --sw-tab-font:         var(--primary-font-family, sans-serif);
-      --sw-tab-font-size:    12px;
+      --sw-tab-accent:         var(--primary-color);
+      --sw-tab-accent-text:    var(--text-primary-color, #fff);
+      --sw-tab-color:          var(--secondary-text-color);
+      --sw-tab-border:         var(--divider-color, rgba(255,255,255,0.1));
+      --sw-tab-font:           var(--primary-font-family, sans-serif);
+      --sw-tab-font-size:      12px;
+      --sw-tab-title-size:     13px;
       --sw-tab-letter-spacing: 0.04em;
-      --sw-tab-gap:          6px;
-      --sw-tab-padding:      5px 14px;
-      --sw-tab-radius:       20px;
+      --sw-tab-gap:            6px;
+      --sw-tab-padding:        5px 14px;
+      --sw-tab-radius:         20px;
     }
 
-    /* ── Shared tab bar ───────────────────────────────────────────────────── */
+    /* ── Tab bar row (title + tablist) ───────────────────────────────────── */
+
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px 0;
+    }
+
+    /* right: mirror of left — tabs first visually, title last */
+    .tab-bar--right {
+      justify-content: flex-end;
+    }
+    .tab-bar--right .tab-title { order: 2; }
+    .tab-bar--right .tabs      { order: 1; }
+
+    /* center: title above tabs in a column */
+    .tab-bar--center {
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* row layouts: tabs fill the remaining space so tab_align has room to work */
+    .tab-bar--left .tabs,
+    .tab-bar--right .tabs {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* tab_align — controls justification of pills/buttons within the tabs container */
+    .tabs--left   { justify-content: flex-start; }
+    .tabs--center { justify-content: center; }
+    .tabs--right  { justify-content: flex-end; }
+
+    .tab-title {
+      font-family: var(--sw-tab-font);
+      font-size: var(--sw-tab-title-size);
+      color: var(--sw-tab-color);
+      font-weight: 600;
+      letter-spacing: var(--sw-tab-letter-spacing);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Shared tab list ─────────────────────────────────────────────────── */
 
     .tabs {
       display: flex;
       gap: var(--sw-tab-gap);
-      padding: 12px 14px 0;
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -256,6 +324,10 @@ export class SwTabCard extends LitElement {
       white-space: nowrap;
       flex-shrink: 0;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .tab.icon-only {
+      padding: 5px 8px;
     }
 
     .tab ha-icon {
@@ -284,10 +356,13 @@ export class SwTabCard extends LitElement {
 
     /* ── Underline ────────────────────────────────────────────────────────── */
 
-    .underline {
-      gap: 0;
+    .tab-bar--underline {
       padding: 12px 6px 0;
       border-bottom: 1px solid var(--sw-tab-border);
+    }
+
+    .underline {
+      gap: 0;
     }
 
     .underline .tab {
@@ -297,16 +372,16 @@ export class SwTabCard extends LitElement {
       margin-bottom: -1px;
     }
 
+    .underline .tab.icon-only {
+      padding: 8px;
+    }
+
     .underline .tab.active {
       border-bottom-color: var(--sw-tab-accent);
       color: var(--sw-tab-accent);
     }
 
     /* ── Dropdown ─────────────────────────────────────────────────────────── */
-
-    .dropdown {
-      padding: 12px 14px 0;
-    }
 
     .dropdown select {
       width: 100%;
