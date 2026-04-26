@@ -1,4 +1,4 @@
-# 🛋️ Room-Card
+# SW Room Card
 
 An elegant, area-aware room overview card for Home Assistant.
 
@@ -14,20 +14,20 @@ An elegant, area-aware room overview card for Home Assistant.
 
 ### HACS (recommended)
 
-Add this repository as a custom repository in HACS (type: **Lovelace**), then install *Room Card*.
+Add this repository as a custom repository in HACS (type: **Lovelace**), then install *Lovelace Sweetwater Cards*.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=h4llow3En&repository=Room-Card&category=plugin)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=h4llow3En&repository=lovelace-sweetwater-cards&category=plugin)
 
 
 ### Manual
 
-1. Copy `room-card.js` to `config/www/room-card/room-card.js`
+1. Download `sweetwater-cards.js` from the [latest release](https://github.com/h4llow3En/lovelace-sweetwater-cards/releases/latest) and copy it to `config/www/`
 2. Add the resource in `configuration.yaml`:
 
 ```yaml
 lovelace:
   resources:
-    - url: /local/room-card/room-card.js
+    - url: /local/sweetwater-cards.js
       type: module
 ```
 
@@ -37,7 +37,7 @@ lovelace:
 ![Minimal config](docs/minimal-config.png)
 
 ```yaml
-type: custom:room-card
+type: custom:sw-room-card
 area: living_room
 ```
 
@@ -50,7 +50,7 @@ With only `area` set, the card auto-discovers the room name, floor, icon, and te
 ![Full config](docs/full-config.png)
 
 ```yaml
-type: custom:room-card
+type: custom:sw-room-card
 
 # ── Identity ──────────────────────────────────────────────────
 area: living_room          # HA area slug. Drives auto-discovery.
@@ -108,7 +108,7 @@ rows:
 
 # ── Theming ────────────────────────────────────────────────────
 styles:                    # Per-card CSS variable overrides. Short keys are
-  color: "#c9a96e"         # expanded to --room-card-<key> automatically.
+  color: "#c9a96e"         # expanded to --sw-room-card-<key> automatically.
   font: "'Cormorant Garamond', serif"
   height: "260px"
 ```
@@ -161,15 +161,15 @@ Compose a row from any combination of entity values and dots. Replaces the need 
     - entity: some.entity_id
       display: dot                           # 'dot' (default) or 'value'
       # --- dot options ---
-      color_on: "var(--room-card-color)"     # Dot colour when state is 'on'
-      color_off: "var(--room-card-inactive)"
+      color_on: "var(--sw-room-card-color)"     # Dot colour when state is 'on'
+      color_off: "var(--sw-room-card-inactive)"
       shape: circle                          # 'circle' (default) or 'square'
       pulse: true                            # Animate opacity when on. Default: false.
       # --- value options ---
       unit: "%"                              # Unit override (default: entity unit_of_measurement)
       warn_above: 1000                       # Show value in warning colour above this threshold.
                                              # Default: none (no warning).
-      color_warn: "var(--room-card-warn)"    # Warning colour override
+      color_warn: "var(--sw-room-card-warn)"    # Warning colour override
 ```
 
 **Examples**
@@ -183,7 +183,7 @@ Bike charging status:
       display: value
     - entity: binary_sensor.bike_battery_charging
       display: dot
-      color_on: "var(--room-card-ok)"
+      color_on: "var(--sw-room-card-ok)"
       pulse: true           # Pulses while actively charging
 ```
 
@@ -204,7 +204,7 @@ Occupancy & Motion:
   content:
     - entity: binary_sensor.living_room_occupancy
       display: dot
-      color_on: "var(--room-card-color)"
+      color_on: "var(--sw-room-card-color)"
     - entity: binary_sensor.living_room_motion
       display: dot
       pulse: true
@@ -220,7 +220,7 @@ Climate & Appliances:
       warn_above: 60
     - entity: switch.dehumidifier
       display: dot
-      color_on: "var(--room-card-color-2)"
+      color_on: "var(--sw-room-card-color-2)"
       pulse: true
 ```
 
@@ -230,28 +230,28 @@ Climate & Appliances:
 
 The card uses HA's standard CSS variables by default, so it works correctly with any theme without configuration.
 
-All colours are exposed as `--room-card-*` custom properties on `:host` for per-card overrides.
+All colours are exposed as `--sw-room-card-*` custom properties on `:host` for per-card overrides.
 
 | Property | Default | Purpose |
 |---|---|---|
-| `--room-card-color` | `--primary-color` | Accent — graph, active dots, icon |
-| `--room-card-color-2` | `--info-color` | Secondary accent — open window dots |
-| `--room-card-ok` | `--success-color` | Success / charged state |
-| `--room-card-warn` | `--warning-color` | Warning threshold values |
-| `--room-card-error` | `--error-color` | Error states |
-| `--room-card-text` | `--primary-text-color` | Name, temperature |
-| `--room-card-text-secondary` | `--secondary-text-color` | Value text in rows |
-| `--room-card-text-disabled` | `--disabled-text-color` | Floor label, row labels |
-| `--room-card-inactive` | `--divider-color` | Inactive / off dot colour |
-| `--room-card-font` | `--primary-font-family` | All text |
-| `--room-card-height` | `240px` | Card height |
-| `--room-card-graph-height` | `60px` | Height of the temperature graph |
-| `--room-card-graph-width` | `1px` | Stroke width of the graph line |
+| `--sw-room-card-color` | `--primary-color` | Accent — graph, active dots, icon |
+| `--sw-room-card-color-2` | `--info-color` | Secondary accent — open window dots |
+| `--sw-room-card-ok` | `--success-color` | Success / charged state |
+| `--sw-room-card-warn` | `--warning-color` | Warning threshold values |
+| `--sw-room-card-error` | `--error-color` | Error states |
+| `--sw-room-card-text` | `--primary-text-color` | Name, temperature |
+| `--sw-room-card-text-secondary` | `--secondary-text-color` | Value text in rows |
+| `--sw-room-card-text-disabled` | `--disabled-text-color` | Floor label, row labels |
+| `--sw-room-card-inactive` | `--divider-color` | Inactive / off dot colour |
+| `--sw-room-card-font` | `--primary-font-family` | All text |
+| `--sw-room-card-height` | `240px` | Card height |
+| `--sw-room-card-graph-height` | `60px` | Height of the temperature graph |
+| `--sw-room-card-graph-width` | `1px` | Stroke width of the graph line |
 
 Override any of these per card using the built-in `styles` key:
 
 ```yaml
-type: custom:room-card
+type: custom:sw-room-card
 area: living_room
 styles:
   color: "#c9a96e"
@@ -259,11 +259,11 @@ styles:
   height: "260px"
 ```
 
-Short keys (e.g. `color`) are automatically expanded to `--room-card-color`. You can also pass the full property name:
+Short keys (e.g. `color`) are automatically expanded to `--sw-room-card-color`. You can also pass the full property name:
 
 ```yaml
 styles:
-  --room-card-color: "#c9a96e"
+  --sw-room-card-color: "#c9a96e"
 ```
 ---
 
