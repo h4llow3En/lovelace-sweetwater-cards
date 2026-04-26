@@ -1,0 +1,6 @@
+{
+  "name": "Lovelace Sweetwater Cards",
+  "description": "Elegant Lovelace card bundle for Home Assistant — sw-room-card, sw-tab-card",
+  "render_readme": true,
+  "filename": "sweetwater-cards.js"
+}
