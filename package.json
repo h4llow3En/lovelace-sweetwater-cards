@@ -5,6 +5,7 @@
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
     "dev": "rollup -c --watch",
+    "dev:ha": "node --env-file=.env.local ./node_modules/.bin/rollup -c --watch",
     "changelog": "git-cliff -o CHANGELOG.md"
   },
   "devDependencies": {

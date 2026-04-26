@@ -1,12 +1,9 @@
-# SW Room Card
+# 🛋️ Lovelace Sweetwater Cards
 
-An elegant, area-aware room overview card for Home Assistant.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=h4llow3En&repository=lovelace-sweetwater-cards&category=plugin)
 
-- Auto-discovers entities from a Home Assistant area (lights, window sensors, temperature)
-- Derives floor label and icon from the area automatically
-- Renders a 24 h temperature graph from history data
-- Flexible `rows` system for status indicators — no hardcoded entity types
-- Works with any HA theme; all colours are overridable per card
+An elegant Lovelace card bundle for Home Assistant.
 
 ---
 
@@ -15,9 +12,6 @@ An elegant, area-aware room overview card for Home Assistant.
 ### HACS (recommended)
 
 Add this repository as a custom repository in HACS (type: **Lovelace**), then install *Lovelace Sweetwater Cards*.
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=h4llow3En&repository=lovelace-sweetwater-cards&category=plugin)
-
 
 ### Manual
 
@@ -33,7 +27,19 @@ lovelace:
 
 ---
 
-## Minimal config
+## 1. SW Room Card
+
+An elegant, area-aware room overview card.
+
+- Auto-discovers entities from a Home Assistant area (lights, window sensors, temperature)
+- Derives floor label and icon from the area automatically
+- Renders a 24 h temperature graph from history data
+- Flexible `rows` system for status indicators — no hardcoded entity types
+- Works with any HA theme; all colours are overridable per card
+
+---
+
+### Minimal config
 ![Minimal config](docs/minimal-config.png)
 
 ```yaml
@@ -45,7 +51,7 @@ With only `area` set, the card auto-discovers the room name, floor, icon, and te
 
 ---
 
-## Full config reference
+### Full config reference
 
 ![Full config](docs/full-config.png)
 
@@ -119,9 +125,9 @@ styles:                    # Per-card CSS variable overrides. Short keys are
 
 ---
 
-## Row types
+### Row types
 
-### `lights`
+#### `lights`
 
 One dot per light entity. Dot is lit in the primary accent colour when the light is on.
 
@@ -135,7 +141,7 @@ One dot per light entity. Dot is lit in the primary accent colour when the light
     - light.floor_lamp
 ```
 
-### `windows`
+#### `windows`
 
 One dot per binary sensor with `device_class: window`, `door`, or `garage_door`. Dot uses the secondary accent colour when open; square shape to distinguish from lights.
 
@@ -149,7 +155,7 @@ One dot per binary sensor with `device_class: window`, `door`, or `garage_door`.
     - binary_sensor.balcony_door
 ```
 
-### `custom`
+#### `custom`
 
 Compose a row from any combination of entity values and dots. Replaces the need for dedicated `switch`, `sensor`, or `bike` row types.
 
@@ -226,7 +232,7 @@ Climate & Appliances:
 
 ---
 
-## Theming
+### Theming
 
 The card uses HA's standard CSS variables by default, so it works correctly with any theme without configuration.
 
@@ -267,7 +273,7 @@ styles:
 ```
 ---
 
-## Auto-discovery details
+### Auto-discovery details
 
 When `area` is set, the card reads from the HA entity and device registries at runtime.
 
@@ -284,6 +290,67 @@ Any field can be overridden manually. Auto-discovery results in nothing being sh
 
 ---
 
-## History cache
+### History cache
 
 History data is fetched via the HA WebSocket API (`history/history_during_period`) and cached per entity+duration for **5 minutes**. The cache is shared across all instances of the card on the same page, so multiple cards using the same entity incur only one fetch.
+
+---
+
+## 2. SW Tab Card
+
+A clean and flexible tab container card that lets you define reusable cards and switch between them without reloading state.
+
+```yaml
+type: custom:sw-tab-card
+tabs:
+  - label: "Overview"
+    icon: mdi:home
+    cards: ["living_room", "kitchen"]
+  - label: "Climate"
+    icon: mdi:thermometer
+    cards: ["thermostat"]
+cards:
+  living_room:
+    type: custom:sw-room-card
+    area: living_room
+  kitchen:
+    type: custom:sw-room-card
+    area: kitchen
+  thermostat:
+    type: thermostat
+    entity: climate.living_room
+```
+
+### Options
+
+| Key | Type | Description |
+|---|---|---|
+| `tabs` | list | List of tab definitions. See below. |
+| `cards` | object | Key-value map of card definitions (reusable by name). |
+| `tab_style` | string | `pills` (default), `underline`, or `dropdown`. |
+| `columns` | number / string | Number of fixed columns for cards, or `'auto'` (default). |
+| `min_column_width` | number | Minimum card width for auto grid in pixels. Default `180`. |
+| `styles` | object | Per-card CSS overrides (e.g., `accent`, `radius`, `font-size`). Expanded to `--sw-tab-<key>`. |
+
+### Tab Definition (`tabs`)
+
+| Key | Type | Description |
+|---|---|---|
+| `label` | string | Text shown on the tab. |
+| `icon` | string | Optional MDI icon (e.g., `mdi:home`). |
+| `cards` | list | List of card keys from `cards` object to render when active. |
+
+### Theming (`styles`)
+
+The `styles` key lets you easily override the internal CSS variables of the tab selector without using `card_mod`:
+
+```yaml
+type: custom:sw-tab-card
+styles:
+  accent: "#c9a96e"      # Active tab background/color
+  radius: "12px"         # Border radius for pills
+  font-size: "14px"      # Tab text size
+tabs:
+  # ...
+```
+Short keys are automatically expanded to `--sw-tab-<key>`.
