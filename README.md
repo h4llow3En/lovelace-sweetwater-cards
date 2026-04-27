@@ -49,7 +49,11 @@ An elegant, area-aware room overview card.
 ---
 
 ### Minimal config
-![Minimal config](docs/minimal-config.png)
+
+<p align="center">
+  <img src="docs/default-room.gif" alt="Room Card Demo" width="49%">
+  <img src="docs/light-dark-room.gif" alt="Light & Dark Mode" width="49%">
+</p>
 
 ```yaml
 type: custom:sw-room-card
@@ -62,7 +66,9 @@ With only `area` set, the card auto-discovers the room name, floor, icon, and te
 
 ### Full config reference
 
-![Full config](docs/full-config.png)
+<p align="center">
+  <img src="docs/full-config.png" alt="Room Card Full config" width="49%">
+</p>
 
 ```yaml
 type: custom:sw-room-card
@@ -309,6 +315,10 @@ History data is fetched via the HA WebSocket API (`history/history_during_period
 
 A clean and flexible tab container card that lets you define reusable cards and switch between them without reloading state.
 
+<p align="center">
+  <img src="docs/tab-pills.gif" alt="Tab Card Demo" width="49%">
+</p>
+
 ```yaml
 type: custom:sw-tab-card
 tabs:
@@ -366,3 +376,44 @@ tabs:
   # ...
 ```
 Short keys are automatically expanded to `--sw-tab-<key>`.
+
+### Examples
+
+**Title and Dropdown Style**
+
+<p align="center">
+  <img src="docs/tab-dropdown.png" alt="Tab Card dropdown config" width="49%">
+</p>
+
+```yaml
+type: custom:sw-tab-card
+title: "Ground Floor"
+title_align: left
+tab_style: dropdown
+tabs:
+  - label: "Living Room"
+    icon: mdi:sofa
+    cards: ["living_room"]
+  - label: "Kitchen"
+    icon: mdi:fridge
+    cards: ["kitchen"]
+cards:
+  # ... card definitions ...
+```
+
+**Underline Style (Centered)**
+
+<p align="center">
+  <img src="docs/tab-underline.png" alt="Tab Card underline centered config" width="49%">
+</p>
+
+```yaml
+type: custom:sw-tab-card
+tab_style: underline
+tab_align: center
+tabs:
+  - label: "Status"
+  - label: "Settings"
+cards:
+  # ... card definitions ...
+```
