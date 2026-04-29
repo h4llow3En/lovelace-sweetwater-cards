@@ -1,9 +1,13 @@
 import { SwRoomCard } from './cards/sw-room-card';
+import { SwRoomCardEditor } from './cards/sw-room-card-editor';
 import { SwTabCard } from './cards/sw-tab-card';
+import { SwTabCardEditor } from './cards/sw-tab-card-editor';
 import { version as VERSION } from '../package.json';
 
 customElements.define('sw-room-card', SwRoomCard);
+customElements.define('sw-room-card-editor', SwRoomCardEditor);
 customElements.define('sw-tab-card', SwTabCard);
+customElements.define('sw-tab-card-editor', SwTabCardEditor);
 
 declare global {
   interface Window {

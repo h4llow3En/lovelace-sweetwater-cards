@@ -116,6 +116,10 @@ export class SwRoomCard extends LitElement {
 
   getCardSize(): number { return 3; }
 
+  static async getConfigElement() {
+    return document.createElement('sw-room-card-editor');
+  }
+
   static getStubConfig(): RoomCardConfig {
     return { area: '', hours_to_show: 24, rows: [{ type: 'lights' }, { type: 'windows' }] };
   }

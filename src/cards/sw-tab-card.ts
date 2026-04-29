@@ -74,6 +74,18 @@ export class SwTabCard extends LitElement {
 
   getCardSize(): number { return 4; }
 
+  static async getConfigElement() {
+    return document.createElement('sw-tab-card-editor');
+  }
+
+  static getStubConfig(): TabCardConfig {
+    return {
+      title: 'Rooms',
+      tabs: [{ label: 'Living Room', cards: [] }],
+      cards: {},
+    };
+  }
+
   // ── Tab state ────────────────────────────────────────────────────────────────
 
   private _restoreTab(tabCount: number): number {
