@@ -6,9 +6,12 @@ import type { TabCardConfig } from './sw-tab-card';
 export class SwTabCardEditor extends LitElement {
   @state() private _config?: TabCardConfig;
   @state() private _pickingCardFor: string | null = null;
-  
+  @state() private _cardPickerLoaded = false;
+
   private _hass?: HomeAssistant;
   private _lovelace?: any;
+  private _loadPromise?: Promise<void>;
+  private _cachedTabSchema?: { keys: string; schema: any[] };
 
   setConfig(config: TabCardConfig) {
     this._config = config;
@@ -24,7 +27,33 @@ export class SwTabCardEditor extends LitElement {
     this.requestUpdate();
   }
 
-  private _schema = [
+  connectedCallback() {
+    super.connectedCallback();
+    this._ensureCardEditorsLoaded();
+  }
+
+  private async _ensureCardEditorsLoaded(): Promise<void> {
+    if (this._cardPickerLoaded) return;
+    this._loadPromise ??= this._doLoadCardEditors();
+    return this._loadPromise;
+  }
+
+  private async _doLoadCardEditors() {
+    if (customElements.get('hui-card-picker') && customElements.get('hui-card-element-editor')) {
+      this._cardPickerLoaded = true;
+      return;
+    }
+    const helpers = await (window as any).loadCardHelpers?.();
+    if (!helpers) return;
+    const card = await helpers.createCardElement({ type: 'vertical-stack', cards: [] });
+    await customElements.whenDefined('hui-vertical-stack-card');
+    await (card?.constructor as any)?.getConfigElement?.();
+    await customElements.whenDefined('hui-card-picker');
+    await customElements.whenDefined('hui-card-element-editor');
+    this._cardPickerLoaded = true;
+  }
+
+  private readonly _schema = [
     { name: 'title', selector: { text: {} } },
     {
       name: 'title_align',
@@ -72,20 +101,26 @@ export class SwTabCardEditor extends LitElement {
 
   private _getTabSchema() {
     const cardKeys = Object.keys(this._config?.cards || {});
-    return [
+    const keysSig = cardKeys.join(',');
+    if (this._cachedTabSchema && this._cachedTabSchema.keys === keysSig) {
+      return this._cachedTabSchema.schema;
+    }
+    const schema = [
       { name: 'label', selector: { text: {} } },
       { name: 'icon', selector: { icon: {} } },
-      { 
-        name: 'cards', 
-        selector: { 
-          select: { 
+      {
+        name: 'cards',
+        selector: {
+          select: {
             multiple: true,
             mode: 'dropdown',
-            options: cardKeys.map(k => ({ value: k, label: k })) 
-          } 
-        } 
+            options: cardKeys.map(k => ({ value: k, label: k }))
+          }
+        }
       }
     ];
+    this._cachedTabSchema = { keys: keysSig, schema };
+    return schema;
   }
 
   private _computeTabLabel = (schema: any) => {
@@ -139,13 +174,17 @@ export class SwTabCardEditor extends LitElement {
 
   private _renameCard(oldKey: string, newKey: string) {
     if (!this._config || oldKey === newKey || !newKey) return;
-    const cards = { ...(this._config.cards || {}) };
-    if (cards[newKey]) return; // Key already exists
-    
-    cards[newKey] = cards[oldKey];
-    delete cards[oldKey];
+    const existing = this._config.cards || {};
+    if (existing[newKey]) {
+      console.warn(`[sw-tab-card] Cannot rename "${oldKey}" → "${newKey}": key already exists.`);
+      this.requestUpdate();
+      return;
+    }
 
-    // Update tabs referencing this card
+    const cards = Object.fromEntries(
+      Object.entries(existing).map(([k, v]) => [k === oldKey ? newKey : k, v])
+    );
+
     const tabs = (this._config.tabs || []).map(tab => {
       if (!tab.cards) return tab;
       return {
@@ -239,7 +278,7 @@ export class SwTabCardEditor extends LitElement {
     .tab-header {
       font-weight: bold;
     }
-    .tab-actions, .card-actions {
+    .tab-actions {
       display: flex;
       gap: 4px;
     }
