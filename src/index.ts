@@ -2,12 +2,16 @@ import { SwRoomCard } from './cards/sw-room-card';
 import { SwRoomCardEditor } from './cards/sw-room-card-editor';
 import { SwTabCard } from './cards/sw-tab-card';
 import { SwTabCardEditor } from './cards/sw-tab-card-editor';
+import { SwClimateCard } from './cards/sw-climate-card';
+import { SwClimateCardEditor } from './cards/sw-climate-card-editor';
 import { version as VERSION } from '../package.json';
 
 customElements.define('sw-room-card', SwRoomCard);
 customElements.define('sw-room-card-editor', SwRoomCardEditor);
 customElements.define('sw-tab-card', SwTabCard);
 customElements.define('sw-tab-card-editor', SwTabCardEditor);
+customElements.define('sw-climate-card', SwClimateCard);
+customElements.define('sw-climate-card-editor', SwClimateCardEditor);
 
 declare global {
   interface Window {
@@ -29,6 +33,13 @@ window.customCards.push(
     name: 'SW Tab Card',
     description: 'Tab card with named, reusable card definitions',
     preview: false,
+    documentationURL: 'https://github.com/h4llow3En/lovelace-sweetwater-cards',
+  },
+  {
+    type: 'sw-climate-card',
+    name: 'SW Climate Card',
+    description: 'Climate card showing temperature, humidity, graph and optional thermostat controls',
+    preview: true,
     documentationURL: 'https://github.com/h4llow3En/lovelace-sweetwater-cards',
   },
 );

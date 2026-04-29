@@ -1,5 +1,12 @@
 import type { HistoryPoint } from './history';
 
+export interface GraphOptions {
+  colorVar?: string;
+  widthVar?: string;
+  fillOpacity?: number;
+  gradientId?: string;
+}
+
 function timeSampleHistory(history: HistoryPoint[], hours: number, samples = 144): number[] {
   const valid = history.map(p => {
     const val = parseFloat(p.s ?? p.state ?? '');
@@ -42,7 +49,13 @@ function gaussianSmooth(values: number[], sigma = 2.0): number[] {
   );
 }
 
-export function buildGraph(history: HistoryPoint[] | null, hours = 24): string {
+export function buildGraph(history: HistoryPoint[] | null, hours = 24, options: GraphOptions = {}): string {
+  const {
+    colorVar = '--sw-room-card-color',
+    widthVar = '--sw-room-card-graph-width',
+    fillOpacity = 0.22,
+    gradientId = 'sw-grad',
+  } = options;
   if (!history || history.length < 2) return '';
 
   const samples = Math.max(Math.ceil(hours) * 6, 60);
@@ -85,15 +98,15 @@ export function buildGraph(history: HistoryPoint[] | null, hours = 24): string {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"
          preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
       <defs>
-        <linearGradient id="sw-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stop-color="var(--sw-room-card-color)" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="var(--sw-room-card-color)" stop-opacity="0.02"/>
+        <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="var(${colorVar})" stop-opacity="${fillOpacity}"/>
+          <stop offset="100%" stop-color="var(${colorVar})" stop-opacity="0.02"/>
         </linearGradient>
       </defs>
-      <path d="${fill}" fill="url(#sw-grad)" stroke="none"/>
+      <path d="${fill}" fill="url(#${gradientId})" stroke="none"/>
       <path d="${line}" fill="none"
-            stroke="var(--sw-room-card-color)"
-            style="stroke-width:var(--sw-room-card-graph-width);"
+            stroke="var(${colorVar})"
+            style="stroke-width:var(${widthVar});"
             stroke-linecap="round" stroke-linejoin="round"
             vector-effect="non-scaling-stroke"/>
     </svg>`;

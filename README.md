@@ -33,6 +33,7 @@ The *Lovelace Sweetwater Cards* bundle currently includes the following cards:
 
 - **SW Room Card** (`custom:sw-room-card`): An elegant, area-aware room overview card that auto-discovers entities (lights, window sensors, temperature) and renders a 24h temperature graph.
 - **SW Tab Card** (`custom:sw-tab-card`): A clean, flexible container card to define reusable nested cards and switch between them seamlessly.
+- **SW Climate Card** (`custom:sw-climate-card`): A compact horizontal card for rooms — shows current temperature, humidity and a 24h background wave graph. Optionally controls a climate thermostat (target temperature stepper + HVAC mode pills).
 
 ---
 
@@ -416,4 +417,231 @@ tabs:
   - label: "Settings"
 cards:
   # ... card definitions ...
+```
+
+---
+
+## 3. SW Climate Card
+
+A compact horizontal card designed for room popups. It shows the current temperature, humidity and an optional 24 h background wave graph. When a `climate_entity` is supplied, the right side renders a target-temperature stepper and HVAC mode pills. Rooms without a thermostat simply omit the controls — no extra configuration needed.
+
+<p align="center">
+  <img src="docs/climate-full.png" alt="Full Climate Card config" width="49%">
+</p>
+
+---
+
+### Minimal config
+
+**Sensor-only** (no thermostat — temperature + humidity + graph):
+
+<p align="center">
+  <img src="docs/climate-sensor-only.png" alt="Minimal Climate Card config" width="49%">
+</p>
+
+```yaml
+type: custom:sw-climate-card
+temp_entity: sensor.living_room_temperature
+humidity_entity: sensor.living_room_humidity
+```
+
+**With thermostat** (adds stepper and mode pills on the right):
+
+<p align="center">
+  <img src="docs/climate-default.png" alt="Climate Card config" width="49%">
+</p>
+
+```yaml
+type: custom:sw-climate-card
+climate_entity: climate.living_room
+temp_entity: sensor.living_room_temperature
+humidity_entity: sensor.living_room_humidity
+```
+
+**Climate entity only** (no dedicated sensors — temperature, humidity and graph all derived from `climate_entity` attributes):
+
+```yaml
+type: custom:sw-climate-card
+climate_entity: climate.living_room
+```
+
+---
+
+### Full config reference
+
+```yaml
+type: custom:sw-climate-card
+
+# ── Labels ────────────────────────────────────────────────────
+title: "Living Room"       # Optional title shown top-left in uppercase.
+                           # Intended for standalone use; omit inside a
+                           # Bubble popup that already shows the room name.
+
+# ── Entities ─────────────────────────────────────────────────
+climate_entity: climate.living_room
+                           # Optional. Required for thermostat controls
+                           # (stepper + mode pills).
+                           # Also used as fallback for temp / humidity
+                           # values via current_temperature /
+                           # current_humidity attributes.
+temp_entity: sensor.living_room_temperature
+                           # Optional. Shown as the main temperature value
+                           # (left side). Also drives the history graph.
+                           # Fallback: climate_entity.current_temperature.
+humidity_entity: sensor.living_room_humidity
+                           # Optional. Shown smaller next to the temperature.
+                           # Fallback: climate_entity.current_humidity.
+hours_to_show: 24          # Hours of history for the background graph.
+                           # Default: 24.
+
+# ── Mode filter ───────────────────────────────────────────────
+modes: [off, heat, auto]   # Optional. Restrict mode pills to this subset
+                           # of entity.hvac_modes. If omitted, all modes
+                           # reported by the entity are shown.
+mode_icons:                # Optional. Override the icon for any mode.
+  heat: mdi:fire           # Defaults are listed in the Theming section.
+  off: mdi:power
+  auto: mdi:autorenew
+
+# ── Visibility ────────────────────────────────────────────────
+show:
+  graph: true              # Background wave graph. Default: true.
+  humidity: true           # Humidity value. Default: true.
+  controls: false          # Force controls visible even when no
+                           # climate_entity is configured (rendered
+                           # greyed out). Default: false.
+
+# ── Interactions ──────────────────────────────────────────────
+hold_action:               # Action fired after holding the card for ~500 ms.
+  action: none             # Default: none. Supported actions:
+                           #   none | more-info | navigate | url |
+                           #   toggle | call-service
+  entity: climate.x        # Entity for more-info / toggle (defaults to
+                           # climate_entity when not set)
+  navigation_path: /lovelace/room
+  url_path: https://...
+  service: light.turn_on
+  service_data: {}
+
+# ── Theming ───────────────────────────────────────────────────
+styles:                    # Per-card CSS variable overrides. Short keys
+  color: "#c9a96e"         # expand to --sw-climate-<key> automatically.
+  height: "140px"
+```
+
+---
+
+### Data resolution
+
+The card resolves display values in this order:
+
+| Value | Source (in order) |
+|---|---|
+| Temperature display | `temp_entity.state` → `climate_entity.attributes.current_temperature` → hidden |
+| Humidity display | `humidity_entity.state` → `climate_entity.attributes.current_humidity` → hidden |
+| Target temperature | `climate_entity.attributes.temperature` |
+| Current mode | `climate_entity.state` |
+| History graph | `temp_entity` sensor history → `climate_entity.attributes.current_temperature` history (attribute-based fetch) → no graph |
+
+---
+
+### HeatControl (thermostat controls)
+
+The right side of the card renders when a `climate_entity` is set (or `show.controls: true`).
+
+#### Target temperature stepper
+
+```
+◀  21.5°  ▶
+```
+
+- Step: **0.5 °** per tap.
+- Clamped to `min_temp` / `max_temp` from the entity attributes.
+- Tap an arrow → calls `climate.set_temperature` and shows the new value immediately (optimistic update). The display returns to the entity value once HA confirms the change.
+- Tap the temperature value itself → opens the `more-info` dialog for `climate_entity`.
+- Stepper and temperature are dimmed when mode is `off`.
+
+#### Mode pills
+
+One compact icon button per available HVAC mode. The active mode is highlighted with the accent colour.
+
+Default icons (all overridable via `mode_icons:`):
+
+| Mode | Default icon |
+|---|---|
+| `off` | `mdi:power` |
+| `heat` | `mdi:fire` |
+| `cool` | `mdi:snowflake` |
+| `auto` | `mdi:autorenew` |
+| `heat_cool` | `mdi:autorenew` |
+| `dry` | `mdi:water-percent` |
+| `fan_only` | `mdi:fan` |
+
+Tap a pill → calls `climate.set_hvac_mode`.
+
+---
+
+### Usage in a room popup
+
+The intended placement is as the second card inside a Bubble Card popup, directly below the popup header:
+
+```yaml
+- type: vertical-stack
+  cards:
+    - <<: *popup_room
+      name: Living Room
+      icon: mdi:sofa
+      hash: "#room-living_room"
+    - type: custom:sw-climate-card
+      climate_entity: climate.living_room
+      temp_entity: sensor.living_room_temperature
+      humidity_entity: sensor.living_room_humidity
+    # … scene strip, sw-tab-card with lights/sensors, …
+```
+
+Rooms **without** a controllable thermostat (e.g. kitchen, basement) simply omit `climate_entity`:
+
+```yaml
+- type: custom:sw-climate-card
+  temp_entity: sensor.kitchen_temperature
+  humidity_entity: sensor.kitchen_humidity
+```
+
+No `show:` toggles needed — the controls section is automatically hidden.
+
+---
+
+### Theming
+
+All colours are exposed as `--sw-climate-*` custom properties on `:host` for per-card overrides. HA theme variables are used as defaults, so no configuration is required with any standard theme.
+
+| Property | Default | Purpose |
+|---|---|---|
+| `--sw-climate-color` | `--primary-color` | Accent — active mode pill background, graph fill |
+| `--sw-climate-active-text` | `--text-primary-color` | Text/icon colour on the active mode pill (contrasts with `--sw-climate-color`) |
+| `--sw-climate-text` | `--primary-text-color` | Main temperature value |
+| `--sw-climate-text-secondary` | `--secondary-text-color` | Humidity, target temperature, stepper arrows |
+| `--sw-climate-text-disabled` | `--disabled-text-color` | Inactive mode pills, title label |
+| `--sw-climate-border` | `--divider-color` | Mode pill border |
+| `--sw-climate-font` | `--primary-font-family` | All text |
+| `--sw-climate-height` | `120px` | Card height |
+| `--sw-climate-graph-height` | `100%` | Height of the background graph (fills the full card) |
+| `--sw-climate-graph-width` | `0px` | Graph stroke width — `0px` means fill only, no line |
+
+Override any of these per card using the `styles` key:
+
+```yaml
+type: custom:sw-climate-card
+climate_entity: climate.living_room
+styles:
+  color: "#c9a96e"
+  height: "140px"
+  graph-width: "0.5px"   # thin stroke on top of the fill
+```
+
+Short keys (e.g. `color`) are automatically expanded to `--sw-climate-color`. Full property names are passed through as-is:
+
+```yaml
+styles:
+  --sw-climate-color: "#c9a96e"
 ```
