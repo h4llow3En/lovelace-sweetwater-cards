@@ -237,7 +237,6 @@ export class SwLightCard extends LitElement {
     return !!modes?.includes('color_temp');
   }
 
-  /** Brightness in percent: 1–100 while on, 0 while off, null when unavailable. */
   private _effectivePct(id: string): number | null {
     const opt = this._optimistic?.[id];
     if (opt) {
@@ -273,7 +272,6 @@ export class SwLightCard extends LitElement {
     return this._onLights().filter(id => this._supportsColorTemp(id));
   }
 
-  /** Master brightness = max of the ON dimmable lights (0 when none are on). */
   private _masterPct(): number {
     const pcts = this._onDimmableLights()
       .map(id => this._effectivePct(id))
@@ -281,7 +279,6 @@ export class SwLightCard extends LitElement {
     return pcts.length ? Math.max(...pcts) : 0;
   }
 
-  /** Intersection of the targets' Kelvin ranges; falls back to a sane default. */
   private _ctRange(targets: string[]): [number, number] {
     let min = -Infinity;
     let max = Infinity;
@@ -370,7 +367,6 @@ export class SwLightCard extends LitElement {
     }, SINGLE_EXIT_TIMEOUT_MS);
   }
 
-  /** Any interaction keeps single-light mode alive a little longer. */
   private _touchSingleExitTimer(): void {
     if (this._singleTarget) this._armSingleExitTimer();
   }
@@ -406,8 +402,7 @@ export class SwLightCard extends LitElement {
     this._touchSingleExitTimer();
 
     if (!this._singleTarget && this._channel === 'brightness') {
-      // Snapshot current levels of the ON dimmable lights: master dimming
-      // scales these proportionally, so scene ratios survive.
+
       const snapshot = new Map<string, number>();
       for (const id of this._onDimmableLights()) {
         const pct = this._effectivePct(id);
@@ -489,14 +484,11 @@ export class SwLightCard extends LitElement {
         optimistic[id] = { off: false, pct: value };
       }
     } else if (value <= 0) {
-      // Master to 0: plain turn_off only — never dim down first, so every
-      // light keeps its previous brightness for the next turn-on.
       for (const id of this._onLights()) {
         calls.push({ __service: 'turn_off', entity_id: id });
         optimistic[id] = { off: true };
       }
     } else if (!snapshot?.size) {
-      // Dragging up while everything is off: only the main light turns on.
       const main = this._mainEntity();
       if (main && this._isAvailable(main)) {
         calls.push({ __service: 'turn_on', entity_id: main, brightness_pct: value });

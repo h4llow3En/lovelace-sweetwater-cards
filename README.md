@@ -35,6 +35,7 @@ The *Lovelace Sweetwater Cards* bundle currently includes the following cards:
 - **SW Tab Card** (`custom:sw-tab-card`): A clean, flexible container card to define reusable nested cards and switch between them seamlessly.
 - **SW Climate Card** (`custom:sw-climate-card`): A compact horizontal card for rooms — shows current temperature, humidity and a 24h background wave graph. Optionally controls a climate thermostat (target temperature stepper + HVAC mode pills).
 - **SW Light Card** (`custom:sw-light-card`): A room light dial — one 270° arc that proportionally dims all lights that are currently on, per-light chips to toggle or fine-tune individual lights, and an optional color temperature mode.
+- **SW Schedule Card** (`custom:sw-schedule-card`): A now-centered ±12 h timeline for [scheduler-component](https://github.com/nielsfaber/scheduler-component) schedules — with a boost/pause override per schedule and inline editing of simple on/off schemes.
 
 ---
 
@@ -653,16 +654,11 @@ styles:
 
 A room-level light control: one arc dial for every light that is currently **on**, plus a chip per light.
 
-```
-        ╭ ─ ─ ─ ╮
-     ◢██████▒▒▒▒▒◣          ← 270° arc = master brightness
-    ◢             ◣
-    █    68 %     ▒
-    █   💡 2      ▒          ← center: master value + lights on
-     ◥           ◤
-        ( 🌓 )               ← mode button: brightness ↔ color temp
-   ⦿ Ceiling  ⦿ Shelf  ○ Sofa
-```
+<p align="center">
+  <img src="docs/light-card-full.png" alt="Light Card — master brightness with chips and scene pills" width="32%">
+  <img src="docs/light-card-single.png" alt="Light Card — single-light mode via chip hold" width="32%">
+  <img src="docs/light-card-temp.png" alt="Light Card — color temperature mode" width="32%">
+</p>
 
 ### Behavior
 
@@ -719,3 +715,60 @@ styles:                    # Theming, see below.
 
 Short keys in `styles:` (e.g. `color`) expand to `--sw-light-card-color`; full `--sw-light-card-*` names pass through as-is.
 
+---
+
+## 5. SW Schedule Card
+
+A timeline view for schedules created by the [nielsfaber scheduler-component](https://github.com/nielsfaber/scheduler-component) (`switch.schedule_*` entities). **Requires that integration** — the card renders and edits its schedules, it is not a scheduler itself.
+
+```
+ ZEITPLAN
+ 💡 Pflanzregal                → 22:00   (⏻)
+ ────▒▒▒▒▓▓▓▓▓▓▓▓│▓▓▓▓▓▓▓▓──────────
+ −12 h          14:32              +12 h
+```
+
+### Behavior
+
+- **Timeline**: a rolling 24 h window with **"now" always centered** (±12 h left/right). "On" periods render as filled spans (past dimmed), single-time-point schedules as dots. Refreshes every 30 s.
+- **Override button** per schedule: **tap = boost** — toggles the schedule's target entities immediately (the schedule takes over again at its next slot); **hold (500 ms) = pause/resume** the schedule (`switch.turn_off/on` on the schedule switch). Paused rows are dimmed and show a pause icon.
+- **Edit mode**: a **long-press on the card** toggles edit mode (auto-exits after 60 s of inactivity). Only then do the add button, ghost rows and pencil icons appear — the everyday view stays clean. The override button's own hold (pause) is unaffected.
+- **Inline editor** (edit mode): rows with a pencil icon are editable — tapping opens a compact editor for *simple* schedules (on/off scheme, fixed times, one target entity): on-window time steppers, additional windows, weekday chips, delete. Saving regenerates a contiguous slot partition (explicit off-slots between the on-windows) via `scheduler.edit`. Complex schedules (sun-based times, non-toggle actions, multiple targets) are display-only — tapping a row outside edit mode (or a non-editable row) opens the schedule switch's more-info dialog.
+- **Creation** (edit mode): a centered **+** button opens the editor with a target picker for all configured entities (default 06:00–22:00 daily, saved via `scheduler.add`); entities without any schedule additionally get a ghost row as a shortcut.
+- Full schedule objects are fetched via the `scheduler/item` websocket command before editing, so stored fields survive a roundtrip. Slot conditions are not editable here and are dropped when a conditioned schedule is saved — leave those to the scheduler integration UI.
+
+### Full config reference
+
+```yaml
+type: custom:sw-schedule-card
+
+name: "Zeitplan"             # Optional small uppercase title.
+entities:                    # Show schedules controlling these entities
+  - light.plant_shelf        # and offer creation for uncovered ones.
+  - switch.greenhouse_plug
+schedules:                   # Alternative: explicit schedule switches
+  - switch.schedule_a1b2c3   # (overrides the entity/tag filter).
+tags: [plants]               # Alternative: filter by scheduler tags.
+discover: false              # true = list ALL schedules when no filter is set.
+time_step: 15                # Editor stepper granularity in minutes.
+styles:
+  fill: linear-gradient(90deg, #7eb8c9, #c9a96e)
+```
+
+With none of `entities` / `schedules` / `tags` set, the card shows nothing — set `discover: true` to list every schedule of the installation.
+
+### Theming
+
+| Property | Default | Purpose |
+|---|---|---|
+| `--sw-schedule-card-color` | `--primary-color` | Accent — active override, save button, day chips |
+| `--sw-schedule-card-fill` | `--sw-schedule-card-color` | Timeline span fill (accepts gradients) |
+| `--sw-schedule-card-track` | `--divider-color` | Timeline track |
+| `--sw-schedule-card-text` / `-text-secondary` / `-text-disabled` | HA text vars | Text levels, now-marker |
+| `--sw-schedule-card-border` | `--divider-color` | Buttons, editor frame |
+| `--sw-schedule-card-chip-bg` | `transparent` | Override button / chip background |
+| `--sw-schedule-card-font` | `--primary-font-family` | Font |
+
+Short keys in `styles:` (e.g. `fill`) expand to `--sw-schedule-card-fill`; full names pass through as-is.
+
+> **Compatibility note**: scheduler-component v3.3.7+ renamed the action key from `service` to `action` in some payloads. The card mirrors whatever key style it reads back from the integration and defaults to `service` when creating — if `scheduler.add` rejects the payload on your version, please open an issue.
