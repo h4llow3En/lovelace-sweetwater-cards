@@ -32,7 +32,7 @@ export class SwTabCard extends LitElement {
 
   private _hass?: HomeAssistant;
   private _config?: TabCardConfig;
-  private _cardEls = new Map<string, CardEl>();
+  private _cardEls = new Map<string, { el: CardEl; config: unknown }>();
   private _storageKey = '';
   private _appliedVars = new Set<string>();
 
@@ -40,8 +40,8 @@ export class SwTabCard extends LitElement {
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
-    for (const el of this._cardEls.values()) {
-      el.hass = hass;
+    for (const entry of this._cardEls.values()) {
+      entry.el.hass = hass;
     }
   }
 
@@ -58,6 +58,11 @@ export class SwTabCard extends LitElement {
     this._storageKey = `sw-tab-card:${config.tabs.map((t, i) => t.label ?? t.icon ?? String(i)).join('|')}`;
 
     if (prevKey !== this._storageKey) this._cardEls.clear();
+    // Drop cached elements whose definition was removed — stale configs are
+    // handled per-element in _getOrCreateCard.
+    for (const name of [...this._cardEls.keys()]) {
+      if (!(name in config.cards)) this._cardEls.delete(name);
+    }
 
     // Apply --sw-tab-* CSS variable overrides
     this._appliedVars.forEach(p => this.style.removeProperty(p));
@@ -92,9 +97,9 @@ export class SwTabCard extends LitElement {
     const saved = sessionStorage.getItem(this._storageKey);
     if (saved !== null) {
       const idx = parseInt(saved, 10);
-      if (!isNaN(idx) && idx < tabCount) return idx;
+      if (!isNaN(idx) && idx >= 0 && idx < tabCount) return idx;
     }
-    return Math.min(this._activeTab, tabCount - 1);
+    return Math.max(0, Math.min(this._activeTab, tabCount - 1));
   }
 
   private _switchTab(idx: number): void {
@@ -107,8 +112,6 @@ export class SwTabCard extends LitElement {
   // Tab switches only toggle CSS visibility — no re-init, no state loss.
 
   private _getOrCreateCard(name: string): CardEl | null {
-    if (this._cardEls.has(name)) return this._cardEls.get(name)!;
-
     const cardConfig = this._config?.cards[name];
     if (!cardConfig || typeof cardConfig !== 'object') return null;
 
@@ -116,6 +119,24 @@ export class SwTabCard extends LitElement {
     const rawType = String(cfg.type ?? '');
     const tag = rawType.startsWith('custom:') ? rawType.slice(7) : rawType;
     if (!tag) return null;
+
+    const cached = this._cardEls.get(name);
+    if (cached) {
+      if (cached.config === cardConfig) return cached.el;
+      // Config changed: re-configure in place when the type is unchanged,
+      // otherwise fall through and recreate the element.
+      const cachedType = String((cached.config as Record<string, unknown>)?.type ?? '');
+      if (cachedType === rawType) {
+        try {
+          cached.el.setConfig(cardConfig);
+          cached.config = cardConfig;
+          return cached.el;
+        } catch (err) {
+          console.error(`sw-tab-card: failed to reconfigure card "${name}", recreating`, err);
+        }
+      }
+      this._cardEls.delete(name);
+    }
 
     const el = document.createElement(tag) as unknown as CardEl;
     try {
@@ -126,7 +147,7 @@ export class SwTabCard extends LitElement {
     }
 
     if (this._hass) el.hass = this._hass;
-    this._cardEls.set(name, el);
+    this._cardEls.set(name, { el, config: cardConfig });
     return el;
   }
 
@@ -343,7 +364,7 @@ export class SwTabCard extends LitElement {
     }
 
     .tab ha-icon {
-      --mdi-icon-size: 16px;
+      --mdc-icon-size: 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;

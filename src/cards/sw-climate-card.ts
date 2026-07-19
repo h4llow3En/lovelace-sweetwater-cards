@@ -346,7 +346,8 @@ export class SwClimateCard extends LitElement {
       clearTimeout(this._holdTimer);
       this._holdTimer = undefined;
     }
-    (e.currentTarget as Element).releasePointerCapture(e.pointerId);
+    const el = e.currentTarget as Element;
+    if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────

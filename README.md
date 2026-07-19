@@ -34,6 +34,7 @@ The *Lovelace Sweetwater Cards* bundle currently includes the following cards:
 - **SW Room Card** (`custom:sw-room-card`): An elegant, area-aware room overview card that auto-discovers entities (lights, window sensors, temperature) and renders a 24h temperature graph.
 - **SW Tab Card** (`custom:sw-tab-card`): A clean, flexible container card to define reusable nested cards and switch between them seamlessly.
 - **SW Climate Card** (`custom:sw-climate-card`): A compact horizontal card for rooms — shows current temperature, humidity and a 24h background wave graph. Optionally controls a climate thermostat (target temperature stepper + HVAC mode pills).
+- **SW Light Card** (`custom:sw-light-card`): A room light dial — one 270° arc that proportionally dims all lights that are currently on, per-light chips to toggle or fine-tune individual lights, and an optional color temperature mode.
 
 ---
 
@@ -645,3 +646,76 @@ Short keys (e.g. `color`) are automatically expanded to `--sw-climate-color`. Fu
 styles:
   --sw-climate-color: "#c9a96e"
 ```
+
+---
+
+## 4. SW Light Card
+
+A room-level light control: one arc dial for every light that is currently **on**, plus a chip per light.
+
+```
+        ╭ ─ ─ ─ ╮
+     ◢██████▒▒▒▒▒◣          ← 270° arc = master brightness
+    ◢             ◣
+    █    68 %     ▒
+    █   💡 2      ▒          ← center: master value + lights on
+     ◥           ◤
+        ( 🌓 )               ← mode button: brightness ↔ color temp
+   ⦿ Ceiling  ⦿ Shelf  ○ Sofa
+```
+
+### Behavior
+
+- **Release-only**: dragging shows a local preview; the `light.turn_on` calls fire when you let go. Touching the dial never turns a light on by accident.
+- **Proportional master dimming**: on drag start the card snapshots the current levels of all lights that are on and scales them proportionally (ceiling 80 % + sofa 30 %, master halved → 40 % + 15 %). Scene moods survive re-dimming. The master value shown is the **max** of the lights that are on.
+- **Master to 0** = plain `light.turn_off` for every light that is on — no dim-down beforehand, so each light keeps its previous brightness for the next turn-on.
+- **Dragging up while everything is off** turns on only the **main light** (`main_entity`, default: first light) at the dragged level.
+- **Center tap**: any light on → all off; all off → the main light turns on at its device-side last level.
+- **Chip tap** toggles that light; **chip hold (500 ms)** enters *single-light mode* — the dial then controls only that light with its absolute value, which intentionally defines a new ratio for future master dimming. Exit via center tap (shows a back arrow) or automatically after 30 s.
+- **Color temperature mode**: the mode button below the dial (shown only when a target light supports `color_temp`) switches the dial to a warm↔cold gradient. Master color temp is **absolute** — one Kelvin value for all lights that are on (proportional Kelvin has no perceptual meaning). Values are clamped to each light's own range.
+- **Scenes**: an optional pill row below the light chips — one pill per configured scene, tap = `scene.turn_on` (with `transition`, default 1 s). No active-state detection; scenes are momentary presets.
+- On/off-only lights have no brightness ring and are excluded from the percentage math, but follow master off / center toggle.
+
+### Full config reference
+
+```yaml
+type: custom:sw-light-card
+
+name: "Living Room"        # Optional small uppercase title.
+area: living_room          # Auto-discovers all light.* entities in the area.
+entities:                  # Explicit list — overrides area discovery.
+  - light.ceiling          # String form, or:
+  - entity: light.shelf    # Object form with per-chip overrides
+    name: Shelf            # (object form is YAML-only; the visual editor
+    icon: mdi:bookshelf    #  flattens it to entity ids when edited there).
+main_entity: light.ceiling # Turn-on target when all lights are off.
+                           # Default: first light of the list/discovery.
+scenes:                    # Optional scene pills below the light chips.
+  - scene.bright           # String form, or object form with per-pill
+  - entity: scene.cozy     # name/icon overrides (YAML-only, like entities).
+    name: Cozy
+    icon: mdi:sofa
+transition: 1              # Seconds for scene.turn_on (0 = no transition).
+show_color_temp: true      # default true; the mode button additionally
+                           # requires at least one color_temp-capable light.
+styles:                    # Theming, see below.
+  color: var(--accent)
+```
+
+### Theming
+
+| Property | Default | Purpose |
+|---|---|---|
+| `--sw-light-card-color` | `--primary-color` | Arc fill, thumb, active chips |
+| `--sw-light-card-track` | `--divider-color` | Arc track, chip ring track |
+| `--sw-light-card-text` | `--primary-text-color` | Center value |
+| `--sw-light-card-text-secondary` | `--secondary-text-color` | Center sub-line, chip names |
+| `--sw-light-card-text-disabled` | `--disabled-text-color` | Off-state icons, title |
+| `--sw-light-card-border` | `--divider-color` | Mode button border |
+| `--sw-light-card-chip-bg` | `transparent` | Mode button / selected chip background |
+| `--sw-light-card-font` | `--primary-font-family` | Font |
+| `--sw-light-card-dial-size` | `180px` | Dial diameter |
+| `--sw-light-card-ct-warm` / `-ct-cold` | `#f5c07a` / `#cfe2ff` | Color-temp gradient ends |
+
+Short keys in `styles:` (e.g. `color`) expand to `--sw-light-card-color`; full `--sw-light-card-*` names pass through as-is.
+

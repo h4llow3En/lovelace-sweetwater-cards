@@ -5,6 +5,8 @@ import type { HomeAssistant, EntityRegistryEntry, AreaRegistryEntry } from '../t
 import { fetchHistory, getCachedHistory, type HistoryPoint } from '../utils/history';
 import { buildGraph } from '../utils/graph';
 
+const FETCH_RETRY_BACKOFF_MS = 60_000;
+
 // ── Config types ──────────────────────────────────────────────────────────────
 
 interface CustomItem {
@@ -61,6 +63,7 @@ export class SwRoomCard extends LitElement {
   private _activeEntities = new Set<string>();
   private _fetchPending = false;
   private _trackedKey: string | null = null;
+  private _fetchFailedAt = 0;
   private _appliedVars = new Set<string>();
 
   // Resolved on discovery
@@ -150,7 +153,9 @@ export class SwRoomCard extends LitElement {
     const cfg = this._config?.temp_entity;
     if (cfg === 'none') return null;
     const show = this._config?.show ?? {};
-    if (show.temp === false || show.graph === false) return null;
+    // Only bail when neither consumer needs the entity — temp display and
+    // graph are independent toggles.
+    if (show.temp === false && show.graph === false) return null;
     if (cfg) return cfg;
 
     const sensor = this._areaEntities.find(e =>
@@ -178,23 +183,32 @@ export class SwRoomCard extends LitElement {
   // ── History ─────────────────────────────────────────────────────────────────
 
   private _maybeUpdateHistory(hass: HomeAssistant): void {
-    const tempId = this._resolvedTempId;
+    const graphOff = this._config?.show?.graph === false;
+    const tempId = graphOff ? null : this._resolvedTempId;
     const hours = this._config?.hours_to_show ?? 24;
     const key = tempId ? `${tempId}:${hours}` : null;
 
     if (key !== this._trackedKey) {
       this._trackedKey = key;
       this._history = null;
+      this._fetchFailedAt = 0;
     }
     if (!key || this._fetchPending) return;
+    // Back off retries after a failure to avoid flooding during outages
+    if (this._fetchFailedAt && Date.now() - this._fetchFailedAt < FETCH_RETRY_BACKOFF_MS) return;
 
     const cached = getCachedHistory(tempId!, hours);
     if (cached) { if (!this._history) this._history = cached; return; }
 
     this._fetchPending = true;
     fetchHistory(hass, tempId!, hours).then(data => {
-      this._history = data;
       this._fetchPending = false;
+      if (data == null) {
+        this._fetchFailedAt = Date.now();
+      } else {
+        this._fetchFailedAt = 0;
+        this._history = data;
+      }
     });
   }
 
@@ -455,7 +469,7 @@ export class SwRoomCard extends LitElement {
       width: 20px;
       height: 20px;
       margin-bottom: 9px;
-      --mdi-icon-size: 20px;
+      --mdc-icon-size: 20px;
     }
 
     .name {
