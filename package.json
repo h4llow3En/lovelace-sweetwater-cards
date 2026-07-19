@@ -1,6 +1,6 @@
 {
   "name": "lovelace-sweetwater-cards",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
