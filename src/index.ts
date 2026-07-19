@@ -6,6 +6,8 @@ import { SwClimateCard } from './cards/sw-climate-card';
 import { SwClimateCardEditor } from './cards/sw-climate-card-editor';
 import { SwLightCard } from './cards/sw-light-card';
 import { SwLightCardEditor } from './cards/sw-light-card-editor';
+import { SwScheduleCard } from './cards/sw-schedule-card';
+import { SwScheduleCardEditor } from './cards/sw-schedule-card-editor';
 import { version as VERSION } from '../package.json';
 
 customElements.define('sw-room-card', SwRoomCard);
@@ -16,6 +18,8 @@ customElements.define('sw-climate-card', SwClimateCard);
 customElements.define('sw-climate-card-editor', SwClimateCardEditor);
 customElements.define('sw-light-card', SwLightCard);
 customElements.define('sw-light-card-editor', SwLightCardEditor);
+customElements.define('sw-schedule-card', SwScheduleCard);
+customElements.define('sw-schedule-card-editor', SwScheduleCardEditor);
 
 declare global {
   interface Window {
@@ -51,6 +55,13 @@ window.customCards.push(
     name: 'SW Light Card',
     description: 'Room light dial with proportional master dimming, per-light chips and color temperature',
     preview: true,
+    documentationURL: 'https://github.com/h4llow3En/lovelace-sweetwater-cards',
+  },
+  {
+    type: 'sw-schedule-card',
+    name: 'SW Schedule Card',
+    description: 'Now-centered timeline for scheduler-component schedules with boost/pause override and inline editing',
+    preview: false,
     documentationURL: 'https://github.com/h4llow3En/lovelace-sweetwater-cards',
   },
 );

@@ -33,9 +33,9 @@ The *Lovelace Sweetwater Cards* bundle currently includes the following cards:
 
 - **SW Room Card** (`custom:sw-room-card`): An elegant, area-aware room overview card that auto-discovers entities (lights, window sensors, temperature) and renders a 24h temperature graph.
 - **SW Tab Card** (`custom:sw-tab-card`): A clean, flexible container card to define reusable nested cards and switch between them seamlessly.
-- **SW Climate Card** (`custom:sw-climate-card`): A compact horizontal card for rooms — shows current temperature, humidity and a 24h background wave graph. Optionally controls a climate thermostat (target temperature stepper + HVAC mode pills).
-- **SW Light Card** (`custom:sw-light-card`): A room light dial — one 270° arc that proportionally dims all lights that are currently on, per-light chips to toggle or fine-tune individual lights, and an optional color temperature mode.
-- **SW Schedule Card** (`custom:sw-schedule-card`): A now-centered ±12 h timeline for [scheduler-component](https://github.com/nielsfaber/scheduler-component) schedules — with a boost/pause override per schedule and inline editing of simple on/off schemes.
+- **SW Climate Card** (`custom:sw-climate-card`): A compact horizontal card for rooms that shows current temperature, humidity and a 24h background wave graph. Optionally controls a climate thermostat (target temperature stepper + HVAC mode pills).
+- **SW Light Card** (`custom:sw-light-card`): A room light dial with a single 270° arc that proportionally dims all lights that are currently on, plus per-light chips to toggle or fine-tune individual lights and an optional color temperature mode.
+- **SW Schedule Card** (`custom:sw-schedule-card`): A now-centered ±12 h timeline for [scheduler-component](https://github.com/nielsfaber/scheduler-component) schedules, with a boost/pause override per schedule and inline editing of simple on/off schemes.
 
 ---
 
@@ -46,7 +46,7 @@ An elegant, area-aware room overview card.
 - Auto-discovers entities from a Home Assistant area (lights, window sensors, temperature)
 - Derives floor label and icon from the area automatically
 - Renders a 24 h temperature graph from history data
-- Flexible `rows` system for status indicators — no hardcoded entity types
+- Flexible `rows` system for status indicators without hardcoded entity types
 - Works with any HA theme; all colours are overridable per card
 
 ---
@@ -106,7 +106,7 @@ show:
   name: true               # Room name
   floor: true              # Floor label
   temp: true               # Temperature value
-  humidity: false          # Humidity value (default: false — opt in explicitly)
+  humidity: false          # Humidity value (default false, opt in explicitly)
   graph: true              # History graph
   rows: true               # All status rows
 
@@ -137,7 +137,7 @@ styles:                    # Per-card CSS variable overrides. Short keys are
   height: "260px"
 ```
 
-> **`show` vs `none`** — both work independently. `show.icon: false` and `icon: none` both hide the icon. Either is fine. Use whichever reads more clearly for your use case.
+> **`show` vs `none`**: both work independently. `show.icon: false` and `icon: none` both hide the icon. Either is fine. Use whichever reads more clearly for your use case.
 
 > **Humidity** is opt-in: it is hidden unless you set `humidity_entity` explicitly or add `show: { humidity: true }` (which enables auto-discovery from the area).
 
@@ -258,8 +258,8 @@ All colours are exposed as `--sw-room-card-*` custom properties on `:host` for p
 
 | Property | Default | Purpose |
 |---|---|---|
-| `--sw-room-card-color` | `--primary-color` | Accent — graph, active dots, icon |
-| `--sw-room-card-color-2` | `--info-color` | Secondary accent — open window dots |
+| `--sw-room-card-color` | `--primary-color` | Accent (graph, active dots, icon) |
+| `--sw-room-card-color-2` | `--info-color` | Secondary accent (open window dots) |
 | `--sw-room-card-ok` | `--success-color` | Success / charged state |
 | `--sw-room-card-warn` | `--warning-color` | Warning threshold values |
 | `--sw-room-card-error` | `--error-color` | Error states |
@@ -425,7 +425,7 @@ cards:
 
 ## 3. SW Climate Card
 
-A compact horizontal card designed for room popups. It shows the current temperature, humidity and an optional 24 h background wave graph. When a `climate_entity` is supplied, the right side renders a target-temperature stepper and HVAC mode pills. Rooms without a thermostat simply omit the controls — no extra configuration needed.
+A compact horizontal card designed for room popups. It shows the current temperature, humidity and an optional 24 h background wave graph. When a `climate_entity` is supplied, the right side renders a target-temperature stepper and HVAC mode pills. Rooms without a thermostat simply omit the controls; no extra configuration is needed.
 
 <p align="center">
   <img src="docs/climate-full.png" alt="Full Climate Card config" width="49%">
@@ -435,7 +435,7 @@ A compact horizontal card designed for room popups. It shows the current tempera
 
 ### Minimal config
 
-**Sensor-only** (no thermostat — temperature + humidity + graph):
+**Sensor-only** (no thermostat; temperature + humidity + graph):
 
 <p align="center">
   <img src="docs/climate-sensor-only.png" alt="Minimal Climate Card config" width="49%">
@@ -460,7 +460,7 @@ temp_entity: sensor.living_room_temperature
 humidity_entity: sensor.living_room_humidity
 ```
 
-**Climate entity only** (no dedicated sensors — temperature, humidity and graph all derived from `climate_entity` attributes):
+**Climate entity only** (no dedicated sensors; temperature, humidity and graph are all derived from `climate_entity` attributes):
 
 ```yaml
 type: custom:sw-climate-card
@@ -609,7 +609,7 @@ Rooms **without** a controllable thermostat (e.g. kitchen, basement) simply omit
   humidity_entity: sensor.kitchen_humidity
 ```
 
-No `show:` toggles needed — the controls section is automatically hidden.
+No `show:` toggles are needed; the controls section is hidden automatically.
 
 ---
 
@@ -619,7 +619,7 @@ All colours are exposed as `--sw-climate-*` custom properties on `:host` for per
 
 | Property | Default | Purpose |
 |---|---|---|
-| `--sw-climate-color` | `--primary-color` | Accent — active mode pill background, graph fill |
+| `--sw-climate-color` | `--primary-color` | Accent (active mode pill background, graph fill) |
 | `--sw-climate-active-text` | `--text-primary-color` | Text/icon colour on the active mode pill (contrasts with `--sw-climate-color`) |
 | `--sw-climate-text` | `--primary-text-color` | Main temperature value |
 | `--sw-climate-text-secondary` | `--secondary-text-color` | Humidity, target temperature, stepper arrows |
@@ -628,7 +628,7 @@ All colours are exposed as `--sw-climate-*` custom properties on `:host` for per
 | `--sw-climate-font` | `--primary-font-family` | All text |
 | `--sw-climate-height` | `120px` | Card height |
 | `--sw-climate-graph-height` | `100%` | Height of the background graph (fills the full card) |
-| `--sw-climate-graph-width` | `0px` | Graph stroke width — `0px` means fill only, no line |
+| `--sw-climate-graph-width` | `0px` | Graph stroke width (`0px` means fill only, no line) |
 
 Override any of these per card using the `styles` key:
 
@@ -655,21 +655,21 @@ styles:
 A room-level light control: one arc dial for every light that is currently **on**, plus a chip per light.
 
 <p align="center">
-  <img src="docs/light-card-full.png" alt="Light Card — master brightness with chips and scene pills" width="32%">
-  <img src="docs/light-card-single.png" alt="Light Card — single-light mode via chip hold" width="32%">
-  <img src="docs/light-card-temp.png" alt="Light Card — color temperature mode" width="32%">
+  <img src="docs/light-card-full.png" alt="Light Card: master brightness with chips and scene pills" width="32%">
+  <img src="docs/light-card-single.png" alt="Light Card: single-light mode via chip hold" width="32%">
+  <img src="docs/light-card-temp.png" alt="Light Card: color temperature mode" width="32%">
 </p>
 
 ### Behavior
 
 - **Release-only**: dragging shows a local preview; the `light.turn_on` calls fire when you let go. Touching the dial never turns a light on by accident.
 - **Proportional master dimming**: on drag start the card snapshots the current levels of all lights that are on and scales them proportionally (ceiling 80 % + sofa 30 %, master halved → 40 % + 15 %). Scene moods survive re-dimming. The master value shown is the **max** of the lights that are on.
-- **Master to 0** = plain `light.turn_off` for every light that is on — no dim-down beforehand, so each light keeps its previous brightness for the next turn-on.
+- **Master to 0** sends a plain `light.turn_off` to every light that is on. There is no dim-down beforehand, so each light keeps its previous brightness for the next turn-on.
 - **Dragging up while everything is off** turns on only the **main light** (`main_entity`, default: first light) at the dragged level.
 - **Center tap**: any light on → all off; all off → the main light turns on at its device-side last level.
-- **Chip tap** toggles that light; **chip hold (500 ms)** enters *single-light mode* — the dial then controls only that light with its absolute value, which intentionally defines a new ratio for future master dimming. Exit via center tap (shows a back arrow) or automatically after 30 s.
-- **Color temperature mode**: the mode button below the dial (shown only when a target light supports `color_temp`) switches the dial to a warm↔cold gradient. Master color temp is **absolute** — one Kelvin value for all lights that are on (proportional Kelvin has no perceptual meaning). Values are clamped to each light's own range.
-- **Scenes**: an optional pill row below the light chips — one pill per configured scene, tap = `scene.turn_on` (with `transition`, default 1 s). No active-state detection; scenes are momentary presets.
+- **Chip tap** toggles that light; **chip hold (500 ms)** enters *single-light mode*, in which the dial controls only that light with its absolute value. This intentionally defines a new ratio for future master dimming. Exit via center tap (shows a back arrow) or automatically after 30 s.
+- **Color temperature mode**: the mode button below the dial (shown only when a target light supports `color_temp`) switches the dial to a warm↔cold gradient. Master color temp is **absolute**: one Kelvin value is applied to all lights that are on, since proportional Kelvin has no perceptual meaning. Values are clamped to each light's own range.
+- **Scenes**: an optional pill row below the light chips with one pill per configured scene. A tap calls `scene.turn_on` (with `transition`, default 1 s). There is no active-state detection; scenes are momentary presets.
 - On/off-only lights have no brightness ring and are excluded from the percentage math, but follow master off / center toggle.
 
 ### Full config reference
@@ -679,7 +679,7 @@ type: custom:sw-light-card
 
 name: "Living Room"        # Optional small uppercase title.
 area: living_room          # Auto-discovers all light.* entities in the area.
-entities:                  # Explicit list — overrides area discovery.
+entities:                  # Explicit list, overrides area discovery.
   - light.ceiling          # String form, or:
   - entity: light.shelf    # Object form with per-chip overrides
     name: Shelf            # (object form is YAML-only; the visual editor
@@ -719,23 +719,24 @@ Short keys in `styles:` (e.g. `color`) expand to `--sw-light-card-color`; full `
 
 ## 5. SW Schedule Card
 
-A timeline view for schedules created by the [nielsfaber scheduler-component](https://github.com/nielsfaber/scheduler-component) (`switch.schedule_*` entities). **Requires that integration** — the card renders and edits its schedules, it is not a scheduler itself.
+A timeline view for schedules created by the [nielsfaber scheduler-component](https://github.com/nielsfaber/scheduler-component) (`switch.schedule_*` entities). **Requires that integration**: the card renders and edits its schedules, it is not a scheduler itself.
 
-```
- ZEITPLAN
- 💡 Pflanzregal                → 22:00   (⏻)
- ────▒▒▒▒▓▓▓▓▓▓▓▓│▓▓▓▓▓▓▓▓──────────
- −12 h          14:32              +12 h
-```
+<p align="center">
+  <img src="docs/schedule-default.png" alt="Schedule Card: now-centered timelines with override buttons" width="49%">
+  <img src="docs/schedule-edit.png" alt="Schedule Card: edit mode with pencil icons and add button" width="49%">
+</p>
+<p align="center">
+  <img src="docs/schedule-edit-interval.png" alt="Schedule Card: inline editor with target pills, time steppers and weekday chips" width="60%">
+</p>
 
 ### Behavior
 
 - **Timeline**: a rolling 24 h window with **"now" always centered** (±12 h left/right). "On" periods render as filled spans (past dimmed), single-time-point schedules as dots. Refreshes every 30 s.
-- **Override button** per schedule: **tap = boost** — toggles the schedule's target entities immediately (the schedule takes over again at its next slot); **hold (500 ms) = pause/resume** the schedule (`switch.turn_off/on` on the schedule switch). Paused rows are dimmed and show a pause icon.
-- **Edit mode**: a **long-press on the card** toggles edit mode (auto-exits after 60 s of inactivity). Only then do the add button, ghost rows and pencil icons appear — the everyday view stays clean. The override button's own hold (pause) is unaffected.
-- **Inline editor** (edit mode): rows with a pencil icon are editable — tapping opens a compact editor for *simple* schedules (on/off scheme, fixed times, one target entity): on-window time steppers, additional windows, weekday chips, delete. Saving regenerates a contiguous slot partition (explicit off-slots between the on-windows) via `scheduler.edit`. Complex schedules (sun-based times, non-toggle actions, multiple targets) are display-only — tapping a row outside edit mode (or a non-editable row) opens the schedule switch's more-info dialog.
-- **Creation** (edit mode): a centered **+** button opens the editor with a target picker for all configured entities (default 06:00–22:00 daily, saved via `scheduler.add`); entities without any schedule additionally get a ghost row as a shortcut.
-- Full schedule objects are fetched via the `scheduler/item` websocket command before editing, so stored fields survive a roundtrip. Slot conditions are not editable here and are dropped when a conditioned schedule is saved — leave those to the scheduler integration UI.
+- **Override button** per schedule: a **tap boosts**, meaning the schedule's target entities toggle immediately and the schedule takes over again at its next slot. A **hold (500 ms) pauses or resumes** the schedule (`switch.turn_off/on` on the schedule switch). Paused rows are dimmed and show a pause icon.
+- **Edit mode**: a **long-press on the card** toggles edit mode (auto-exits after 60 s of inactivity). Only then do the add button, ghost rows and pencil icons appear, so the everyday view stays clean. The override button's own hold (pause) is unaffected.
+- **Inline editor** (edit mode): rows with a pencil icon are editable. Tapping one opens a compact editor for *simple* schedules (on/off scheme, fixed times, one target entity) with on-window time steppers, additional windows, weekday chips and a delete action. Saving regenerates a contiguous slot partition (explicit off-slots between the on-windows) via `scheduler.edit`. Complex schedules (sun-based times, non-toggle actions, multiple targets) are display-only. Tapping a row outside edit mode, or a non-editable row, opens the schedule switch's more-info dialog.
+- **Creation** (edit mode): a centered **+** button opens the editor with a target picker for all configured entities (default 06:00-22:00 daily, saved via `scheduler.add`); entities without any schedule additionally get a ghost row as a shortcut.
+- Full schedule objects are fetched via the `scheduler/item` websocket command before editing, so stored fields survive a roundtrip. Slot conditions are not editable here and are dropped when a conditioned schedule is saved, so leave those to the scheduler integration UI.
 
 ### Full config reference
 
@@ -745,7 +746,10 @@ type: custom:sw-schedule-card
 name: "Zeitplan"             # Optional small uppercase title.
 entities:                    # Show schedules controlling these entities
   - light.plant_shelf        # and offer creation for uncovered ones.
-  - switch.greenhouse_plug
+  - entity: switch.greenhouse_plug
+    name: Greenhouse         # Optional per-entity label/icon overrides
+    icon: mdi:sprout         # (object form is YAML-only; the visual editor
+                             #  flattens it to entity ids when edited there).
 schedules:                   # Alternative: explicit schedule switches
   - switch.schedule_a1b2c3   # (overrides the entity/tag filter).
 tags: [plants]               # Alternative: filter by scheduler tags.
@@ -755,13 +759,13 @@ styles:
   fill: linear-gradient(90deg, #7eb8c9, #c9a96e)
 ```
 
-With none of `entities` / `schedules` / `tags` set, the card shows nothing — set `discover: true` to list every schedule of the installation.
+With none of `entities` / `schedules` / `tags` set, the card shows nothing. Set `discover: true` to list every schedule of the installation.
 
 ### Theming
 
 | Property | Default | Purpose |
 |---|---|---|
-| `--sw-schedule-card-color` | `--primary-color` | Accent — active override, save button, day chips |
+| `--sw-schedule-card-color` | `--primary-color` | Accent (active override, save button, day chips) |
 | `--sw-schedule-card-fill` | `--sw-schedule-card-color` | Timeline span fill (accepts gradients) |
 | `--sw-schedule-card-track` | `--divider-color` | Timeline track |
 | `--sw-schedule-card-text` / `-text-secondary` / `-text-disabled` | HA text vars | Text levels, now-marker |
@@ -771,4 +775,4 @@ With none of `entities` / `schedules` / `tags` set, the card shows nothing — s
 
 Short keys in `styles:` (e.g. `fill`) expand to `--sw-schedule-card-fill`; full names pass through as-is.
 
-> **Compatibility note**: scheduler-component v3.3.7+ renamed the action key from `service` to `action` in some payloads. The card mirrors whatever key style it reads back from the integration and defaults to `service` when creating — if `scheduler.add` rejects the payload on your version, please open an issue.
+> **Compatibility note**: scheduler-component v3.3.7+ renamed the action key from `service` to `action` in some payloads. The card mirrors whatever key style it reads back from the integration and defaults to `service` when creating. If `scheduler.add` rejects the payload on your version, please open an issue.
